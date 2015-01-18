@@ -2,7 +2,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * OracleTextでキーワードに対する部分一致検索を行う場合のキーワードコンバーター
+ * OracleTextで部分一致検索を行う場合のキーワードコンバーター
  * @auther uggds
  */
 public class KeywordConverter {
