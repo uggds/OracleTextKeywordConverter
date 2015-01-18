@@ -25,15 +25,16 @@ public class KeywordConverter {
             String chunk = m.group();
 
             if (chunk.matches(RESERVED_WORD)) {
+                // 文字列が予約語の場合
                 convertedKeyword.append("{").append(escapeReservedWord(chunk)).append("}");
             } else if (0 == m.start() && keyword.length() == m.end() && chunk.matches(NUMBER_ALPHABET)) {
-                // 末端文字列が英数記号の場合
+                // 文字列が英数のみの場合
                 convertedKeyword.append("(%").append(chunk).append("%)");
             } else if (0 == m.start() && chunk.matches(NUMBER_ALPHABET)) {
-                // 先頭文字列が英数記号の場合
+                // 先頭文字列が英数の場合
                 convertedKeyword.append("(%").append(chunk).append(")");
             } else if (keyword.length() == m.end() && chunk.matches(NUMBER_ALPHABET)) {
-                // 末端文字列が英数記号の場合
+                // 末端文字列が英数の場合
                 convertedKeyword.append("(").append(chunk).append("%)");
             } else {
                 convertedKeyword.append("(").append(chunk).append(")");
@@ -44,7 +45,7 @@ public class KeywordConverter {
     }
 
     private static String escapeReservedWord(String chunk) {
-        // 文字列が予約語の場合
+        // 文字列が予約語の場合はエスケープする
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < chunk.length(); i++) {
             sb.append("\\").append(chunk.charAt(i));
