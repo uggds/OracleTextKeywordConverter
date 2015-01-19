@@ -1,0 +1,2 @@
+# OracleTextKeywordConverter
+Oracle Text で部分一致検索をするためのキーワードコンバーター
