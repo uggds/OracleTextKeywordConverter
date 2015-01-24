@@ -1,55 +1,46 @@
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+interface Converter {
+    Pattern getPattern();
+
+    String convert(String value);
+}
+
 /**
  * OracleTextで部分一致検索を行う場合のキーワードコンバーター
- * @auther uggds
+ * @author uggds
  */
 public class KeywordConverter {
 
-    /** 半角英数字 */
-    private static final String NUMBER_ALPHABET = "[0-9a-zA-Z０-９Ａ-Ｚａ-ｚ]+";
-    /** OracleText予約語 */
-    private static final String RESERVED_WORD = "[,&=?{}\\()\\[\\]\\-\\;~|$!>*%_]+";
-    /** 半角英数字と予約語以外 */
-    private static final String OTHER_WORD = "[^0-9a-zA-Z０-９Ａ-Ｚａ-ｚ,&= ?{}\\()\\[\\]\\-\\;~|$!>*%_]+";
+    /**
+     * 文字種と文字の位置に応じたコンバーターリスト
+     */
+    private static final List<Converter> CONVERTER_LIST = Arrays.asList(
+            new ReservedWordConverter(),
+            new AllNumberAndAlphabetConverter(),
+            new StartWithNumberAndAlphabetConverter(),
+            new EndWithNumberAndAlphabetConverter(),
+            new OtherConverter()
+    );
 
     public static String convert(String keyword) {
-        StringBuilder convertedKeyword = new StringBuilder();
-        Pattern p = Pattern.compile("(" + NUMBER_ALPHABET + " | "
-                + RESERVED_WORD + " | "
-                + OTHER_WORD + ")", Pattern.COMMENTS);
-        Matcher m = p.matcher(keyword);
-        while (m.find()) {
-
-            String chunk = m.group();
-
-            if (chunk.matches(RESERVED_WORD)) {
-                // 文字列が予約語の場合
-                convertedKeyword.append("{").append(escapeReservedWord(chunk)).append("}");
-            } else if (0 == m.start() && keyword.length() == m.end() && chunk.matches(NUMBER_ALPHABET)) {
-                // 文字列が英数のみの場合
-                convertedKeyword.append("(%").append(chunk).append("%)");
-            } else if (0 == m.start() && chunk.matches(NUMBER_ALPHABET)) {
-                // 先頭文字列が英数の場合
-                convertedKeyword.append("(%").append(chunk).append(")");
-            } else if (keyword.length() == m.end() && chunk.matches(NUMBER_ALPHABET)) {
-                // 末端文字列が英数の場合
-                convertedKeyword.append("(").append(chunk).append("%)");
-            } else {
-                convertedKeyword.append("(").append(chunk).append(")");
+        int position = 0;
+        StringBuilder sb = new StringBuilder(keyword.length() + 10);
+        while (position < keyword.length()) {
+            for (Converter converter : CONVERTER_LIST) {
+                final Matcher matcher = converter.getPattern()
+                        .matcher(keyword);
+                if (matcher.find(position) && matcher.start() == position) {
+                    position = matcher.end();
+                    sb.append(converter.convert(matcher.group()));
+                    break;
+                }
             }
-
-        }
-        return convertedKeyword.toString();
-    }
-
-    private static String escapeReservedWord(String chunk) {
-        // 文字列が予約語の場合はエスケープする
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < chunk.length(); i++) {
-            sb.append("\\").append(chunk.charAt(i));
         }
         return sb.toString();
     }
 }
+
